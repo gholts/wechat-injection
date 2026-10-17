@@ -1,4 +1,4 @@
-name: Build dylib
+name: Build dylibs
 
 'on':
   workflow_dispatch:
@@ -9,13 +9,16 @@ permissions:
 jobs:
   build:
     runs-on: macos-26
+    strategy:
+      matrix:
+        target: [WeChatFocused, WeChatStickers]
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - run: ./build.sh WeChatFocused
+      - run: ./build.sh "${{ matrix.target }}"
       - uses: actions/upload-artifact@v7
         with:
-          name: dev.gholts.dylib.WeChatFocused
-          path: build/WeChatFocused/
+          name: dev.gholts.dylib.${{ matrix.target }}
+          path: build/${{ matrix.target }}/
           if-no-files-found: error
