@@ -9,7 +9,7 @@ const EXTENSION = 'WeChatStickers.appex';
 function runSigner(module, args, errors) {
   errors.length = 0;
   const code = module.callMain(args);
-  if (errors.some((line) => /Unknown issuer hash/i.test(line))) throw new Error('Unsupported certificate issuer. Use an Apple Development or Distribution P12.');
+  if (errors.some((line) => /Unknown issuer hash/i.test(line))) throw new Error('Certificate issuer is unsupported by the bundled signer.');
   if (code !== 0) {
     if (errors.some((line) => /password|p12|private key|mac verify/i.test(line))) throw new Error('Cannot unlock the P12. Check the certificate and password.');
     throw new Error('Signing failed. Check the certificate, profiles, and decrypted IPA.');
@@ -36,14 +36,12 @@ async function payload(FS, base) {
   if (!FS.analyzePath(`/payload/${DYLIB}`).exists || !FS.analyzePath(`/payload/${EXTENSION}/Info.plist`).exists) throw new Error('Incomplete sticker payload.');
 }
 
-function copyTree(FS, from, to) {
-  FS.mkdirTree(to);
-  for (const path of filesUnder(FS, from)) {
-    const destination = to + path.slice(from.length);
-    FS.mkdirTree(destination.slice(0, destination.lastIndexOf('/')));
-    FS.writeFile(destination, FS.readFile(path), { canOwn: true });
-    FS.chmod(destination, FS.stat(path).mode & 0o777);
-  }
+function fileBytes(FS, path) {
+  // Borrow MEMFS bytes for inspection; copying a WeChat executable can cost hundreds of MB.
+  // Callers must not retain this view across writes to that file.
+  const file = FS.analyzePath(path).object;
+  if (!file || !FS.isFile(file.mode) || !file.usedBytes) throw new Error(`Missing or empty file: ${path}`);
+  return file.contents.subarray(0, file.usedBytes);
 }
 
 export async function buildIPA({ ipa, certificate, password, provisionFiles, appGroup = '', base }, progress) {
@@ -73,7 +71,7 @@ export async function buildIPA({ ipa, certificate, password, provisionFiles, app
     const signing = ['-f', '-k', '/credentials/certificate.p12', '-p', password];
     progress('Checking the signing certificate…');
     runSigner(module, [...signing, '-m', '/credentials/0.mobileprovision', `/payload/${DYLIB}`], errors);
-    await verifySigner(FS.readFile(`/payload/${DYLIB}`), profiles);
+    await verifySigner(fileBytes(FS, `/payload/${DYLIB}`), profiles);
 
     const appPath = await extractIPA(ipa, FS, progress);
     const mainPath = `${appPath}/Info.plist`;
@@ -85,7 +83,8 @@ export async function buildIPA({ ipa, certificate, password, provisionFiles, app
     // Existing copies are rejected, avoiding two differently located copies being loaded.
     if (FS.analyzePath(extensionPath).exists) throw new Error('This IPA already contains WeChatStickers. Start with the original decrypted IPA.');
     progress('Adding WeChat Stickers…');
-    copyTree(FS, `/payload/${EXTENSION}`, extensionPath);
+    FS.mkdirTree(`${appPath}/PlugIns`);
+    FS.rename(`/payload/${EXTENSION}`, extensionPath);
     const extensionInfo = readPlist(FS.readFile(`${extensionPath}/Info.plist`));
     extensionInfo.CFBundleIdentifier = plan.extension.id;
     extensionInfo.CFBundleShortVersionString = mainInfo.CFBundleShortVersionString;
@@ -100,15 +99,16 @@ export async function buildIPA({ ipa, certificate, password, provisionFiles, app
     const bundles = [];
     for (const path of filesUnder(FS, appPath).filter((path) => /\.(app|appex)\/Info\.plist$/.test(path))) {
       const info = readPlist(FS.readFile(path));
+      if (info.CFBundleSupportedPlatforms && (!Array.isArray(info.CFBundleSupportedPlatforms) || !info.CFBundleSupportedPlatforms.includes('iPhoneOS'))) throw new Error('Only iOS app bundles are supported. Use an IPA without Watch or simulator bundles.');
       if (path !== mainPath && !path.startsWith(`${extensionPath}/`) && info.CFBundleIdentifier?.startsWith(`${oldID}.`)) info.CFBundleIdentifier = plan.app.id + info.CFBundleIdentifier.slice(oldID.length);
-      if (info.WKCompanionAppBundleIdentifier === oldID) info.WKCompanionAppBundleIdentifier = plan.app.id;
       const profile = plan.byID.get(info.CFBundleIdentifier);
       if (!profile) throw new Error(`Add a provisioning profile for the existing extension ${info.CFBundleIdentifier}.`);
       const executable = info.CFBundleExecutable;
       if (typeof executable !== 'string' || !executable || executable.includes('/') || executable === '..' || executable.includes('\\')) throw new Error('Invalid bundle executable name.');
       const folder = path.slice(0, -'/Info.plist'.length);
       const binary = `${folder}/${executable}`;
-      const slices = inspectMachO(FS.readFile(binary));
+      const slices = inspectMachO(fileBytes(FS, binary));
+      if (!slices.some((slice) => slice.cpuType === 0x0100000c)) throw new Error('Every iOS app bundle needs an arm64 executable.');
       if (slices.some((slice) => slice.encrypted)) throw new Error('IPA contains encrypted App Store code. Select a decrypted WeChat IPA.');
       if (slices.some((slice) => slice.libraries.some((name) => name.endsWith(`/${DYLIB}`)))) throw new Error('WeChatStickers is already injected. Start with the original decrypted IPA.');
       FS.chmod(binary, 0o755);
@@ -119,28 +119,28 @@ export async function buildIPA({ ipa, certificate, password, provisionFiles, app
     }
     progress('Signing the app and extensions…');
     const args = [...signing];
-    ordered.forEach((_, index) => args.push('-m', `/credentials/${index}.mobileprovision`));
+    // The vendor matches profile IDs by suffix. Unused profiles can shadow the correct ID.
+    ordered.forEach((profile, index) => {
+      if (bundles.some((bundle) => bundle.profile === profile)) args.push('-m', `/credentials/${index}.mobileprovision`);
+    });
     args.push('-l', `/payload/${DYLIB}`, '-z', '1', '-o', '/output/WeChatStickers.ipa', appPath);
     runSigner(module, args, errors);
     progress('Verifying signed bundles…');
     for (const bundle of bundles) {
-      const bytes = FS.readFile(bundle.binary);
+      const bytes = fileBytes(FS, bundle.binary);
       await verifySigner(bytes, [bundle.profile]);
       for (const slice of inspectMachO(bytes)) {
         const entitlements = signatureSlots(slice.signature).get(5);
         if (!entitlements) throw new Error('Signed bundle is missing entitlements.');
         const values = readPlist(entitlements.subarray(8));
-        if (!values['application-identifier']?.endsWith(`.${bundle.profile.id}`)) throw new Error('Signed bundle has the wrong App ID.');
+        if (values['application-identifier'] !== bundle.profile.application || values['com.apple.developer.team-identifier'] !== bundle.profile.team) throw new Error('Signed bundle does not match its provisioning profile.');
         if ((bundle.main || bundle.profile === plan.extension) && !values['com.apple.security.application-groups']?.includes(plan.group)) throw new Error('Signed bundle is missing the shared App Group.');
         if (bundle.main && !slice.libraries.includes(`@executable_path/${DYLIB}`)) throw new Error('Dylib injection failed: the IPA has no room for the load command.');
       }
     }
-    const output = FS.analyzePath('/output/WeChatStickers.ipa').object;
-    if (!output?.usedBytes) throw new Error('Signing did not produce an IPA.');
-    return new Blob([output.contents.subarray(0, output.usedBytes)], { type: 'application/octet-stream' });
+    return new Blob([fileBytes(FS, '/output/WeChatStickers.ipa')], { type: 'application/octet-stream' });
   } finally {
     // No persistent filesystem is mounted. The worker is destroyed after each job.
-    password = '';
     for (const name of FS.readdir('/credentials')) if (name !== '.' && name !== '..') FS.unlink(`/credentials/${name}`);
   }
 }

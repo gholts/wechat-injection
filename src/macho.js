@@ -27,7 +27,7 @@ export function inspectMachO(bytes) {
     let cursor = offset + (magic === 0xfeedfacf ? 32 : 28);
     const end = cursor + view.getUint32(offset + 20, true);
     if (end > offset + length) throw new Error('Invalid Mach-O load commands.');
-    const result = { encrypted: false, libraries: [], signature: null, offset, length };
+    const result = { cpuType: view.getUint32(offset + 4, true), encrypted: false, libraries: [], signature: null, offset, length };
     for (let i = 0; i < view.getUint32(offset + 16, true); i++) {
       bound(cursor, 8);
       const command = view.getUint32(cursor, true);

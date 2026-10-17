@@ -1,7 +1,7 @@
 import { ZipReader, BlobReader, configure } from '@zip.js/zip.js';
 
 configure({ useWebWorkers: false });
-export const MAX_EXPANDED = 3 * 1024 ** 3;
+const MAX_EXPANDED = 3 * 1024 ** 3;
 
 export function safePath(path) {
   const normalized = path.replace(/\/$/, '');
@@ -29,27 +29,28 @@ export async function extractIPA(file, FS, progress) {
     const roots = entries.filter((entry) => /^Payload\/[^/]+\.app\/Info\.plist$/.test(entry.filename));
     if (roots.length !== 1) throw new Error('Select an IPA containing exactly one app in Payload/.');
     let completed = 0;
+    let previousPercent = -1;
     for (const entry of entries) {
       const path = `/work/ipa/${safePath(entry.filename)}`;
       if (entry.directory) { FS.mkdirTree(path); continue; }
       FS.mkdirTree(path.slice(0, path.lastIndexOf('/')));
       const mode = (entry.externalFileAttributes >>> 16) & 0xffff;
-      {
-        FS.writeFile(path, new Uint8Array(entry.uncompressedSize), { canOwn: true });
-        const stream = FS.open(path, 'r+');
-        let position = 0;
-        try {
-          await entry.getData(new WritableStream({ write(chunk) {
-            if (position + chunk.length > entry.uncompressedSize) throw new Error('Invalid archive entry size.');
-            FS.write(stream, chunk, 0, chunk.length, position);
-            position += chunk.length;
-          } }), { checkSignature: true });
-          if (position !== entry.uncompressedSize) throw new Error('Incomplete archive entry.');
-        } finally { FS.close(stream); }
-        FS.chmod(path, mode & 0o777 || 0o644);
-      }
+      FS.writeFile(path, new Uint8Array(entry.uncompressedSize), { canOwn: true });
+      const stream = FS.open(path, 'r+');
+      let position = 0;
+      try {
+        await entry.getData(new WritableStream({ write(chunk) {
+          if (position + chunk.length > entry.uncompressedSize) throw new Error('Invalid archive entry size.');
+          FS.write(stream, chunk, 0, chunk.length, position);
+          position += chunk.length;
+        } }), { checkSignature: true });
+        if (position !== entry.uncompressedSize) throw new Error('Incomplete archive entry.');
+      } finally { FS.close(stream); }
+      FS.chmod(path, mode & 0o777 || 0o644);
       completed += entry.uncompressedSize;
-      progress(`Unpacking IPA · ${Math.round(completed / Math.max(total, 1) * 100)}%`);
+      const percent = Math.round(completed / Math.max(total, 1) * 100);
+      if (percent !== previousPercent) progress(`Unpacking IPA · ${percent}%`);
+      previousPercent = percent;
     }
     return `/work/ipa/${roots[0].filename.slice(0, -'/Info.plist'.length)}`;
   } finally { await reader.close(); }

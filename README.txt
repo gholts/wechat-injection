@@ -15,6 +15,7 @@ App Group is automatic when there is one shared group; otherwise enter the one t
 The page checks CMS signatures, expiry, certificate membership and App IDs.
 It does not establish Apple's certificate trust or revocation status.
 Desktop browsers recommended. Expanded IPAs limited to 3 GB; no symlinks.
+Only arm64 iOS bundles are supported; Watch and simulator bundles are rejected.
 
 Tests use disposable certificates, never real credentials:
   python3 test/create-fixtures.py

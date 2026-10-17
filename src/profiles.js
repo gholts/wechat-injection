@@ -24,7 +24,7 @@ export async function readProfile(file) {
   if (!content) throw new Error('Provisioning profile has no content.');
   const value = readPlist(new Uint8Array(content));
   if (!Array.isArray(value.Platform) || !value.Platform.includes('iOS')) throw new Error(`Not an iOS provisioning profile: ${file.name}`);
-  if (!(value.ExpirationDate instanceof Date) || value.ExpirationDate <= new Date()) throw new Error(`Profile expired: ${file.name}`);
+  if (!(value.ExpirationDate instanceof Date) || !Number.isFinite(value.ExpirationDate.getTime()) || value.ExpirationDate <= new Date()) throw new Error(`Profile expired or has an invalid expiry date: ${file.name}`);
   if (value.CreationDate > new Date()) throw new Error(`Profile is not valid yet: ${file.name}`);
   const entitlements = value.Entitlements;
   const application = entitlements?.['application-identifier'];
@@ -37,7 +37,7 @@ export async function readProfile(file) {
   if (!Array.isArray(value.DeveloperCertificates) || !value.DeveloperCertificates.length) throw new Error('Profile contains no signing certificates.');
   const groups = entitlements['com.apple.security.application-groups'] ?? [];
   if (!Array.isArray(groups) || groups.some((group) => typeof group !== 'string' || !group.startsWith('group.') || group.includes('*'))) throw new Error('Invalid App Group entitlements.');
-  return { id, team, groups, bytes, name: file.name, certificates: await Promise.all(value.DeveloperCertificates.map(digest)) };
+  return { id, application, team, groups, bytes, name: file.name, certificates: await Promise.all(value.DeveloperCertificates.map(digest)) };
 }
 
 export function selectProfiles(profiles, requestedGroup = '') {
