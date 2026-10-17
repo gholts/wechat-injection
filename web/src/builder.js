@@ -46,12 +46,12 @@ function copyTree(FS, from, to) {
   }
 }
 
-export async function buildIPA({ ipa, certificate, password, provisionFiles, base }, progress) {
+export async function buildIPA({ ipa, certificate, password, provisionFiles, appGroup = '', base }, progress) {
   if (!ipa?.size || !certificate?.size || !provisionFiles?.length) throw new Error('Select an IPA, a P12, and provisioning profiles.');
   if (certificate.size > 4 * 1024 * 1024) throw new Error('P12 files must be smaller than 4 MB.');
   progress('Checking provisioning profiles…');
   const profiles = await Promise.all(provisionFiles.map(readProfile));
-  const plan = selectProfiles(profiles);
+  const plan = selectProfiles(profiles, appGroup);
   const errors = [];
   progress('Loading local signing tools…');
   const { default: createModule } = await import(/* @vite-ignore */ new URL('vendor/zsign.mjs', base).href);

@@ -40,7 +40,7 @@ export async function readProfile(file) {
   return { id, team, groups, bytes, name: file.name, certificates: await Promise.all(value.DeveloperCertificates.map(digest)) };
 }
 
-export function selectProfiles(profiles) {
+export function selectProfiles(profiles, requestedGroup = '') {
   const byID = new Map();
   for (const profile of profiles) {
     if (byID.has(profile.id)) throw new Error(`Select only one profile for ${profile.id}.`);
@@ -52,8 +52,12 @@ export function selectProfiles(profiles) {
   const app = byID.get(extension.id.slice(0, -'.WeChatStickers'.length));
   if (!app) throw new Error(`Add the WeChat app profile for ${extension.id.slice(0, -'.WeChatStickers'.length)}.`);
   if (profiles.some((profile) => profile.team !== app.team)) throw new Error('All profiles must belong to the same signing team.');
-  const group = app.groups.find((group) => extension.groups.includes(group));
-  if (!group) throw new Error('WeChat and WeChatStickers profiles need the same App Group entitlement.');
+  const commonGroups = [...new Set(app.groups.filter((group) => extension.groups.includes(group)))];
+  if (!commonGroups.length) throw new Error('WeChat and WeChatStickers profiles need the same App Group entitlement.');
+  const selected = requestedGroup.trim();
+  if (selected && !commonGroups.includes(selected)) throw new Error(`App Group ${selected} is not authorized by both profiles.`);
+  if (!selected && commonGroups.length > 1) throw new Error(`Enter the App Group to use: ${commonGroups.join(', ')}.`);
+  const group = selected || commonGroups[0];
   return { app, extension, group, byID };
 }
 

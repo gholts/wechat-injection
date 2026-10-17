@@ -1,7 +1,10 @@
 body { max-width: 640px; margin: 32px auto; padding: 0 16px; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-input, button { font: inherit; }
+input, button, input::file-selector-button { font: inherit; box-sizing: border-box; }
 fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-input { max-width: 100%; }
+input { width: 100%; max-width: 100%; height: 36px; }
+input:not([type=file]) { padding: 4px 8px; }
+button, input::file-selector-button { width: 128px; height: 36px; padding: 4px 8px; }
+input::file-selector-button { margin-right: 8px; }
 #status { overflow-wrap: anywhere; }
 .error { color: #a00; }
 [hidden] { display: none !important; }

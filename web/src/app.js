@@ -53,6 +53,7 @@ form.addEventListener('submit', (event) => {
     certificate: form.elements.certificate.files[0],
     password: form.elements.password.value,
     provisionFiles: [...form.elements.profiles.files],
+    appGroup: form.elements.appGroup.value.trim(),
     base: new URL('./', document.baseURI).href,
   });
   form.elements.password.value = '';

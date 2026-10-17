@@ -10,6 +10,7 @@ Local preview (Mac + Xcode + Node 24):
 Use a decrypted IPA, P12, optional password, and explicit provisioning profiles.
 Profiles must share a signing team; WeChat + <WeChat ID>.WeChatStickers need
 the same App Group. Existing extensions are preserved and need profiles too.
+App Group is automatic when there is one shared group; otherwise enter the one to use.
 The page checks CMS signatures, expiry, certificate membership and App IDs.
 It does not establish Apple's certificate trust or revocation status.
 Desktop browsers recommended. Expanded IPAs limited to 3 GB; no symlinks.

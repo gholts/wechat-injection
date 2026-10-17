@@ -24,6 +24,8 @@
           <input id="password" name="password" type="password" autocomplete="off" spellcheck="false"></p>
         <p><label for="profiles">Provisioning profiles (.mobileprovision)</label><br>
           <input id="profiles" name="profiles" type="file" accept=".mobileprovision,.provisionprofile" multiple required aria-describedby="profiles-help"></p>
+        <p><label for="app-group">App Group (optional)</label><br>
+          <input id="app-group" name="appGroup" type="text" placeholder="Auto from profiles" autocomplete="off" spellcheck="false" aria-describedby="profiles-help"></p>
       </fieldset>
       <p><button id="build" type="submit">Build IPA</button> <button id="cancel" type="button" hidden>Cancel</button></p>
       <div id="status-panel" hidden>
@@ -33,7 +35,7 @@
       <p><a id="download" download="WeChatStickers.ipa" hidden>Download signed IPA</a></p>
     </form>
     <hr>
-    <p id="profiles-help">Select profiles for WeChat and <code>&lt;WeChat App ID&gt;.WeChatStickers</code>, with the same App Group and signing certificate. Include profiles for existing extensions.</p>
+    <p id="profiles-help">Select profiles for WeChat and <code>&lt;WeChat App ID&gt;.WeChatStickers</code>, with the same App Group and signing certificate. Include profiles for existing extensions. Enter an App Group if the profiles share more than one.</p>
     <p>After installation, open WeChat’s heart tab, then WeChat Stickers in Messages.</p>
     <p>Use a desktop browser for large IPAs. Certificate revocation is not checked.</p>
     <p><a href="https://github.com/gholts/wechat-injection" target="_blank" rel="noreferrer">Source</a> · <a href="./licenses.txt" target="_blank" rel="noreferrer">Licenses</a></p>

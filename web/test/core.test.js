@@ -32,6 +32,13 @@ test('missing host, duplicate IDs, mismatched groups and expiry fail', async () 
   await assert.rejects(profile('expired'), /expired/);
 });
 
+test('explicit App Group must be shared; multiple groups require a choice', async () => {
+  const profiles = await Promise.all([profile('app-multi'), profile('extension-multi')]);
+  assert.throws(() => selectProfiles(profiles), /Enter the App Group/);
+  assert.throws(() => selectProfiles(profiles, 'group.not-authorized'), /not authorized by both/);
+  assert.equal(selectProfiles(profiles, ' group.9a96c46eb073c04a.5 ').group, 'group.9a96c46eb073c04a.5');
+});
+
 test('changed profile content fails CMS signature verification', async () => {
   const data = await readFile(fixture('app.mobileprovision'));
   const start = data.indexOf(Buffer.from('group.dev.test.stickers'));

@@ -33,6 +33,8 @@ now = datetime.now(timezone.utc).replace(tzinfo=None)
 for name, bundle, groups, expiration in [
     ('app', 'dev.test.WeChat', ['group.dev.test.stickers'], now+timedelta(days=7)),
     ('extension', 'dev.test.WeChat.WeChatStickers', ['group.dev.test.stickers'], now+timedelta(days=7)),
+    ('app-multi', 'dev.test.WeChat', ['group.dev.test.stickers', 'group.9a96c46eb073c04a.5'], now+timedelta(days=7)),
+    ('extension-multi', 'dev.test.WeChat.WeChatStickers', ['group.dev.test.stickers', 'group.9a96c46eb073c04a.5'], now+timedelta(days=7)),
     ('share', 'dev.test.WeChat.Share', [], now+timedelta(days=7)),
     ('wrong-group', 'dev.test.WeChat.WeChatStickers', ['group.other'], now+timedelta(days=7)),
     ('expired', 'dev.test.WeChat.WeChatStickers', ['group.dev.test.stickers'], now-timedelta(days=1)),

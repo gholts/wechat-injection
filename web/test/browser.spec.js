@@ -7,12 +7,13 @@ import { readPlist } from '../src/plist.js';
 import { inspectMachO, signatureSlots } from '../src/macho.js';
 
 const fixture = (name) => fileURLToPath(new URL(`../test-results/fixtures/${name}`, import.meta.url));
-async function select(page, { ipa = 'wechat.ipa', certificate = 'identity.p12', password = 'fixture-password', profiles = ['app', 'extension'] } = {}) {
+async function select(page, { ipa = 'wechat.ipa', certificate = 'identity.p12', password = 'fixture-password', profiles = ['app', 'extension'], appGroup = '' } = {}) {
   await page.goto('./');
   await page.locator('#ipa').setInputFiles(fixture(ipa));
   await page.locator('#certificate').setInputFiles(fixture(certificate));
   await page.locator('#password').fill(password);
   await page.locator('#profiles').setInputFiles(profiles.map((name) => fixture(`${name}.mobileprovision`)));
+  await page.locator('#app-group').fill(appGroup);
 }
 
 test('builds a signed IPA locally, preserving existing extensions', async ({ page }) => {
@@ -78,6 +79,24 @@ test('optional password supports an unprotected P12', async ({ page }) => {
   await expect(page.locator('#download')).toBeVisible();
 });
 
+test('explicit App Group reaches both signed bundles', async ({ page }) => {
+  await select(page, { profiles: ['app-multi', 'extension-multi'], appGroup: 'group.9a96c46eb073c04a.5' });
+  await page.locator('#build').click();
+  await expect(page.locator('#cancel')).toBeHidden({ timeout: 60_000 });
+  await expect(page.locator('#status')).toHaveText('Your signed IPA is ready.');
+  const waiting = page.waitForEvent('download');
+  await page.locator('#download').click();
+  const output = fixture('explicit-group.ipa');
+  await (await waiting).saveAs(output);
+  const reader = new ZipReader(new BlobReader(new Blob([await readFile(output)])));
+  const entries = await reader.getEntries();
+  for (const name of ['Payload/WeChat.app/Info.plist', 'Payload/WeChat.app/PlugIns/WeChatStickers.appex/Info.plist']) {
+    const value = readPlist(await entries.find((entry) => entry.filename === name).getData(new Uint8ArrayWriter()));
+    expect(value.WeChatStickersAppGroup).toBe('group.9a96c46eb073c04a.5');
+  }
+  await reader.close();
+});
+
 test('wrong password and incompatible groups produce no download', async ({ page }) => {
   await select(page, { password: 'wrong' });
   await page.locator('#build').click();
@@ -102,6 +121,11 @@ test('responsive form stays within the viewport and can cancel', async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await select(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const sizes = await page.locator('input').evaluateAll((elements) => elements.map((element) => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })));
+  expect(new Set(sizes.map((size) => size.width)).size).toBe(1);
+  expect(sizes.every((size) => size.height === 36)).toBe(true);
+  const buttons = await page.evaluate(() => [getComputedStyle(document.querySelector('#build')), getComputedStyle(document.querySelector('#ipa'), '::file-selector-button'), getComputedStyle(document.querySelector('#profiles'), '::file-selector-button')].map((style) => [style.width, style.height]));
+  expect(buttons).toEqual([['128px', '36px'], ['128px', '36px'], ['128px', '36px']]);
   await page.locator('#build').click();
   await page.locator('#cancel').click();
   await expect(page.locator('#status')).toContainText('Canceled');
