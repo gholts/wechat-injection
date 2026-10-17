@@ -1,38 +1,28 @@
-WeChat dylibs
+Browser-only WeChat Stickers IPA builder. No signing server or credential storage.
 
-WeChatFocused: Moments tab + native Photos picker.
-WeChatStickers: WeChat favorite stickers in iMessage.
+Local preview (Node 24):
+  npm ci --ignore-scripts
+  npm run build
+  npm run preview
 
-Build (Mac + Xcode)
+This branch contains only the web project. Required prebuilt sticker files live in
+public/payload/; their source revision and hashes are included. No Xcode required.
 
-  make build          Build both packages.
-  make WeChatFocused  Build only WeChatFocused.
-  make WeChatStickers Build only WeChatStickers.
-  make format         Format source.
-  make lint           Check formatting and compile.
+Use a decrypted IPA, P12, optional password, and explicit provisioning profiles.
+Profiles must share a signing team; WeChat + <WeChat ID>.WeChatStickers need
+the same App Group. Existing extensions are preserved and need profiles too.
+App Group is automatic when there is one shared group; otherwise enter the one to use.
+The page checks CMS signatures, expiry, certificate membership and App IDs.
+It does not establish Apple's certificate trust or revocation status.
+Desktop browsers recommended. Expanded IPAs limited to 3 GB; no symlinks.
 
-Output: build/<name>/dev.gholts.dylib.<name>.dylib
-Inject into WeChat using Feather: path @executable_path, folder /Frameworks/,
-extension injection off. WeChatFocused requires MSHookMessageEx.
+Tests use disposable certificates, never real credentials:
+  python3 test/create-fixtures.py
+  npm test
+  npx playwright install chromium && npm run test:browser
 
-Browser IPA builder: web/README.txt. Assembly and signing run locally in the browser.
+GitHub Pages: select GitHub Actions as the Pages source. The Browser IPA builder
+workflow tests the page, builds it, and deploys this branch.
+Only public build files reach GitHub; users' IPA and signing files stay local.
 
-Stickers setup
-
-Dylib injection alone is insufficient. Use your registered App Group and signed
-WeChat bundle ID (replace the example values):
-
-  APP_GROUP_ID=group.your.id WECHAT_BUNDLE_ID=your.wechat.id make WeChatStickers
-
-1. Embed build/WeChatStickers/WeChatStickers.appex in WeChat.app/PlugIns/.
-   For CI downloads, extract WeChatStickers.appex.tar.gz first.
-2. Merge AppGroup.entitlements into both app and extension entitlements.
-   Both provisioning profiles must support that group. Keep other entitlements.
-3. Match the extension's version/build to WeChat. Sign the dylib, extension, and app;
-   preserve the extension when installing.
-
-Open WeChat's heart tab, then reopen WeChat Stickers in Messages to sync.
-Device compatibility and account safety are not guaranteed.
-
-Code: Apache-2.0. WeChat icon artwork is excluded from this license.
-Icon source: https://apps.apple.com/us/app/wechat/id414478124
+Signer provenance and licenses: public/vendor/PROVENANCE.txt and public/licenses.txt.

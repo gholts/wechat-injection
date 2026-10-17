@@ -1,0 +1,6 @@
+Unsigned WeChatStickers payload. No signing credentials.
+
+Source: https://github.com/gholts/wechat-injection/tree/342098d81f807e72aadf8567cbf184198747c3d0
+Build from that revision on Mac + Xcode: make WeChatStickers
+Copy the dylib and .appex from build/WeChatStickers/.
+File sizes, SHA-256 hashes, and modes are recorded in manifest.json.

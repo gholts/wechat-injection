@@ -1,7 +1,6 @@
 build/
 *.dSYM/
 .DS_Store
-web/node_modules/
-web/dist/
-web/public/payload/
-web/test-results/
+node_modules/
+dist/
+test-results/

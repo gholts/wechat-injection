@@ -51,10 +51,9 @@ for name, bundle, groups, expiration in [
 
 app = out/'input/Payload/WeChat.app'
 app.mkdir(parents=True, exist_ok=True)
-(out/'main.c').write_text('int main(void) { return 0; }\n')
-sdk = subprocess.check_output(['xcrun','--sdk','iphoneos','--show-sdk-path'], text=True).strip()
-run('xcrun','--sdk','iphoneos','clang','-arch','arm64','-isysroot',sdk,'-miphoneos-version-min=14.0',
-    '-Wl,-headerpad_max_install_names', str(out/'main.c'), '-o', str(app/'WeChat'))
+# Precompiled iOS arm64 `int main(void) { return 0; }`, with header padding.
+# Signing tests inspect its bytes; they never execute it or require an Apple SDK.
+shutil.copy2(root/'test/fixtures/stub-arm64', app/'WeChat')
 info = {'CFBundleIdentifier': 'com.tencent.xin', 'CFBundleExecutable': 'WeChat', 'CFBundleName':'WeChat',
         'CFBundlePackageType': 'APPL', 'CFBundleShortVersionString': '8.0.55', 'CFBundleVersion':'808055',
         'MinimumOSVersion': '14.0', 'UIDeviceFamily':[1,2]}

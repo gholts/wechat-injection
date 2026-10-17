@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "files": [
+    {
+      "path": "WeChatStickers.appex/Assets.car",
+      "size": 173336,
+      "sha256": "9f58837821253c3d7e088f28de4832d9b6d7cfe5a58ca340d6b148668358cf98",
+      "mode": 420
+    },
+    {
+      "path": "WeChatStickers.appex/Info.plist",
+      "size": 1282,
+      "sha256": "184a50b4a171b5d09e16853057184a94dedf1d05b486be9e1cf61fd56aeea94a",
+      "mode": 420
+    },
+    {
+      "path": "WeChatStickers.appex/WeChatStickers",
+      "size": 73184,
+      "sha256": "12db423365b939780fa5bb55f3b750f49d7f1fd52fe8060aa6d33c9a52ad76b3",
+      "mode": 493
+    },
+    {
+      "path": "dev.gholts.dylib.WeChatStickers.dylib",
+      "size": 206848,
+      "sha256": "9cb2504146ec61b1bc04d5c7e3aa066a7ce19db698e6c63d8acb2243ef3b66ba",
+      "mode": 493
+    }
+  ]
+}
