@@ -1,0 +1,54 @@
+name: Browser IPA builder
+
+'on':
+  workflow_dispatch:
+  push:
+    branches: [wechat-stickers-browser-builder]
+
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: make WeChatStickers
+      - run: python3 web/scripts/prepare-payload.py
+      - run: npm ci --ignore-scripts --prefix web
+      - run: python3 web/test/create-fixtures.py
+      - run: npm test --prefix web
+      - run: npm run build --prefix web
+      - run: npx playwright install chromium
+        working-directory: web
+      - run: npm run test:browser --prefix web
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
