@@ -1,9 +1,12 @@
-SOURCES := $(wildcard src/*.h src/*.m)
+SOURCES := $(shell find dylibs shared -name '*.h' -o -name '*.m')
 
-.PHONY: build format lint
+.PHONY: build WeChatFocused format lint
 
 build:
 	./build.sh
+
+WeChatFocused:
+	./build.sh $@
 
 format:
 	xcrun clang-format -i $(SOURCES)

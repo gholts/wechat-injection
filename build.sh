@@ -2,13 +2,15 @@
 set -eu
 
 cd "$(dirname "$0")"
-mkdir -p build
-xcrun --sdk iphoneos clang \
-  -arch arm64e -miphoneos-version-min=14.0 -fobjc-arc \
-  -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
-  -install_name @rpath/WeChatFocused.dylib \
-  -isysroot "$(xcrun --sdk iphoneos --show-sdk-path)" \
-  -framework Foundation -framework UIKit -framework Photos \
-  -framework ImageIO -framework CoreGraphics -framework AVFoundation \
-  -weak_framework PhotosUI -weak_framework UniformTypeIdentifiers \
-  -o build/WeChatFocused.dylib src/Entry.m src/MomentsTab.m src/NativePicker.m
+case "${1:-all}" in
+  all|WeChatFocused) ;;
+  *) echo "Usage: $0 [WeChatFocused]" >&2; exit 1 ;;
+esac
+SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+ROOT=$PWD
+export SDK ROOT
+if [ "${1:-all}" = all ]; then
+  sh dylibs/WeChatFocused/build.sh
+else
+  sh "dylibs/$1/build.sh"
+fi

@@ -6,9 +6,6 @@
 
 typedef void (*WCHookMessage)(Class, SEL, IMP, IMP *);
 
-void WCInstallMoments(WCHookMessage hook);
-void WCInstallNativePicker(WCHookMessage hook);
-
 static inline id WCMessage0(id object, const char *name) {
     return ((id(*)(id, SEL))objc_msgSend)(object, sel_registerName(name));
 }
