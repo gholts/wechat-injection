@@ -1,0 +1,10 @@
+zsign WebAssembly runtime, bundled locally (no runtime CDN).
+Source: https://github.com/AntonP29/SylvaSigner
+Revision: f7127d6857a6aaa919b7430ef73baa262fe28070
+Files: public/wasm/zsign.mjs and public/wasm/zsign.wasm
+Build recipe: scripts/build-wasm.mjs and scripts/build-openssl-wasm.mjs at that revision.
+Native engine: vendor/zsign (MIT). OpenSSL 3.5.7 (Apache-2.0), zlib/minizip notices included.
+
+SHA-256:
+207ab7e770a0cc47c87487d3bdfaaba60c62fc98be6a5bd12695da35bc169e12  zsign.mjs
+dc07d37d7a10e9f99e70d6e4b2249ceeeefdf7339e863e020f012759b26b3648  zsign.wasm

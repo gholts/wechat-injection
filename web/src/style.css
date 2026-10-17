@@ -1,0 +1,7 @@
+body { max-width: 640px; margin: 32px auto; padding: 0 16px; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+input, button { font: inherit; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+input { max-width: 100%; }
+#status { overflow-wrap: anywhere; }
+.error { color: #a00; }
+[hidden] { display: none !important; }

@@ -13,7 +13,9 @@ Build (Mac + Xcode)
 
 Output: build/<name>/dev.gholts.dylib.<name>.dylib
 Inject into WeChat using Feather: path @executable_path, folder /Frameworks/,
-extension injection off. Both dylibs require MSHookMessageEx.
+extension injection off. WeChatFocused requires MSHookMessageEx.
+
+Browser IPA builder: web/README.txt. Assembly and signing run locally in the browser.
 
 Stickers setup
 

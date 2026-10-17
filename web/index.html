@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build and sign a WeChat Stickers IPA locally in your browser.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>WeChat Stickers</title>
+  <link rel="icon" href="./icon.png">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <main>
+    <h1>WeChat Stickers</h1>
+    <p>Build and sign an IPA locally. Your files stay in this browser.</p>
+    <hr>
+    <form id="builder">
+      <fieldset id="inputs">
+        <p><label for="ipa">Decrypted WeChat IPA</label><br>
+          <input id="ipa" name="ipa" type="file" accept=".ipa" required></p>
+        <p><label for="certificate">Certificate (.p12)</label><br>
+          <input id="certificate" name="certificate" type="file" accept=".p12,.pfx" required></p>
+        <p><label for="password">Password (optional)</label><br>
+          <input id="password" name="password" type="password" autocomplete="off" spellcheck="false"></p>
+        <p><label for="profiles">Provisioning profiles (.mobileprovision)</label><br>
+          <input id="profiles" name="profiles" type="file" accept=".mobileprovision,.provisionprofile" multiple required aria-describedby="profiles-help"></p>
+      </fieldset>
+      <p><button id="build" type="submit">Build IPA</button> <button id="cancel" type="button" hidden>Cancel</button></p>
+      <div id="status-panel" hidden>
+        <progress id="activity" aria-label="Building IPA"></progress>
+        <p id="status" role="status" aria-live="polite"></p>
+      </div>
+      <p><a id="download" download="WeChatStickers.ipa" hidden>Download signed IPA</a></p>
+    </form>
+    <hr>
+    <p id="profiles-help">Select profiles for WeChat and <code>&lt;WeChat App ID&gt;.WeChatStickers</code>, with the same App Group and signing certificate. Include profiles for existing extensions.</p>
+    <p>After installation, open WeChat’s heart tab, then WeChat Stickers in Messages.</p>
+    <p>Use a desktop browser for large IPAs. Certificate revocation is not checked.</p>
+    <p><a href="https://github.com/gholts/wechat-injection" target="_blank" rel="noreferrer">Source</a> · <a href="./licenses.txt" target="_blank" rel="noreferrer">Licenses</a></p>
+  </main>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
