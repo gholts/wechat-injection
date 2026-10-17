@@ -1,24 +1,19 @@
-Browser-only WeChat Stickers IPA builder. No signing server or credential storage.
+WeChat Stickers IPA builder. Runs in your browser; files stay local.
+
+Use a decrypted IPA, P12 (password optional), and explicit profiles for WeChat,
+<WeChat ID>.WeChatStickers, and existing extensions. Use the same team and
+certificate. WeChat and WeChatStickers must share an App Group.
 
 Local preview (Node 24):
   npm ci --ignore-scripts
   npm run build
   npm run preview
 
-This branch contains only the web project. Required prebuilt sticker files live in
-public/payload/; their source revision and hashes are included. No Xcode required.
+Deploy: Settings > Pages > Source = GitHub Actions.
+Push to builder; the workflow builds and publishes dist/.
 
-Use a decrypted IPA, P12, optional password, and explicit provisioning profiles.
-Profiles must share a signing team; WeChat + <WeChat ID>.WeChatStickers need
-the same App Group. Existing extensions are preserved and need profiles too.
-App Group is automatic when there is one shared group; otherwise enter the one to use.
-The page checks CMS signatures, expiry, certificate membership and App IDs.
-It does not establish Apple's certificate trust or revocation status.
-Desktop browsers recommended. Expanded IPAs limited to 3 GB; no symlinks.
-Only arm64 iOS bundles are supported; Watch and simulator bundles are rejected.
+Desktop recommended. arm64 iOS only; max 3 GB expanded; no symlinks.
+Apple certificate trust and revocation are not checked.
 
-GitHub Pages: select GitHub Actions as the Pages source. The Browser IPA builder
-workflow builds and deploys this branch.
-Only public build files reach GitHub; users' IPA and signing files stay local.
-
-Signer provenance and licenses: public/vendor/PROVENANCE.txt and public/licenses.txt.
+Prebuilt files and source details: public/payload/ and public/vendor/.
+Licenses: public/licenses.txt.
