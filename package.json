@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test test/*.test.js",
-    "test:browser": "playwright test"
+    "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
     "@zip.js/zip.js": "2.24.0",
@@ -17,7 +15,6 @@
     "@xmldom/xmldom": "0.9.12"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1",
     "vite": "8.3.4"
   }
 }

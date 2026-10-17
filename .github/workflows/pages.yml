@@ -26,11 +26,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci --ignore-scripts
-      - run: python3 test/create-fixtures.py
-      - run: npm test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

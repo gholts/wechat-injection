@@ -17,13 +17,8 @@ It does not establish Apple's certificate trust or revocation status.
 Desktop browsers recommended. Expanded IPAs limited to 3 GB; no symlinks.
 Only arm64 iOS bundles are supported; Watch and simulator bundles are rejected.
 
-Tests use disposable certificates, never real credentials:
-  python3 test/create-fixtures.py
-  npm test
-  npx playwright install chromium && npm run test:browser
-
 GitHub Pages: select GitHub Actions as the Pages source. The Browser IPA builder
-workflow tests the page, builds it, and deploys this branch.
+workflow builds and deploys this branch.
 Only public build files reach GitHub; users' IPA and signing files stay local.
 
 Signer provenance and licenses: public/vendor/PROVENANCE.txt and public/licenses.txt.
