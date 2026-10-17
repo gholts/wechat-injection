@@ -3,7 +3,7 @@ name: Browser IPA builder
 'on':
   workflow_dispatch:
   push:
-    branches: [wechat-stickers-browser-builder]
+    branches: [builder]
 
 permissions:
   contents: read

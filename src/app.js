@@ -58,7 +58,7 @@ form.addEventListener('submit', (event) => {
         download.focus();
       } else { message(data.message, true); finish(); }
     };
-    worker.onerror = () => { message('Processing stopped. Reload or try a desktop browser with more free memory.', true); finish(); };
+    worker.onerror = (event) => { message(event.message || 'Could not load the signing worker. Reload the page and try again.', true); finish(); };
     worker.postMessage({
       ipa: form.elements.ipa.files[0],
       certificate: form.elements.certificate.files[0],
