@@ -2,13 +2,20 @@
 #import "Runtime.h"
 #import "StickerImage.h"
 #import "Store.h"
-#import <dlfcn.h>
 #import <stdatomic.h>
 
 static id (*originalFavorites)(id, SEL);
 static void (*originalClear)(id, SEL);
 static dispatch_queue_t exportQueue;
 static atomic_uint_fast64_t revision;
+
+static void WCSHook(Class type, SEL selector, IMP replacement, IMP *original) {
+    Method method = class_getInstanceMethod(type, selector);
+    *original = method_getImplementation(method);
+    // Add an override for inherited methods; never modify a superclass's method.
+    if (!class_addMethod(type, selector, replacement, method_getTypeEncoding(method)))
+        method_setImplementation(method, replacement);
+}
 
 static BOOL WCSMatches(Method method, const char *types) {
     if (!method) return NO;
@@ -115,18 +122,17 @@ static void WCSClear(id self, SEL command) {
 __attribute__((constructor)) static void WCSInstall(void) {
     @autoreleasepool {
         if (![NSBundle.mainBundle.bundlePath.pathExtension isEqualToString:@"app"] || !WCSStoreDirectory()) return;
-        WCHookMessage hook = (WCHookMessage)dlsym(RTLD_DEFAULT, "MSHookMessageEx");
         Class manager = NSClassFromString(@"CEmoticonMgr");
         SEL favorites = sel_registerName("getCustomEmoticonListWithOutGame");
         SEL clear = sel_registerName("onServiceClearData");
         Method path = class_getClassMethod(NSClassFromString(@"EmoticonUtil"), sel_registerName("pathOfEmoticonForMd5:needUpdateTime:ignoreWxAM:"));
-        if (!hook || !WCSMatches(class_getInstanceMethod(manager, favorites), "@@:") ||
+        if (!WCSMatches(class_getInstanceMethod(manager, favorites), "@@:") ||
             !WCSMatches(class_getInstanceMethod(manager, clear), "v@:") || !WCSMatches(path, "@@:@BB")) {
             NSLog(@"[WeChatStickers] Unsupported runtime; no hooks installed");
             return;
         }
         exportQueue = dispatch_queue_create("dev.gholts.dylib.WeChatStickers.export", DISPATCH_QUEUE_SERIAL);
-        hook(manager, clear, (IMP)WCSClear, (IMP *)&originalClear);
-        hook(manager, favorites, (IMP)WCSFavorites, (IMP *)&originalFavorites);
+        WCSHook(manager, clear, (IMP)WCSClear, (IMP *)&originalClear);
+        WCSHook(manager, favorites, (IMP)WCSFavorites, (IMP *)&originalFavorites);
     }
 }

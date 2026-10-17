@@ -7,6 +7,8 @@
 #endif
 
 static inline NSURL *WCSStoreDirectory(void) {
-    NSURL *group = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:WCS_APP_GROUP];
+    id configured = [NSBundle.mainBundle objectForInfoDictionaryKey:@"WeChatStickersAppGroup"];
+    NSString *identifier = [configured isKindOfClass:NSString.class] && [configured hasPrefix:@"group."] ? configured : WCS_APP_GROUP;
+    NSURL *group = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:identifier];
     return [group URLByAppendingPathComponent:@"WeChatStickers" isDirectory:YES];
 }

@@ -22,7 +22,7 @@ rm -rf "$EXTENSION"
 mkdir -p "$EXTENSION"
 
 xcrun --sdk iphoneos clang \
-  -arch arm64e -miphoneos-version-min=14.0 -fobjc-arc \
+  -arch arm64 -arch arm64e -miphoneos-version-min=14.0 -fobjc-arc \
   -Wall -Wextra -Werror -fvisibility=hidden -dynamiclib \
   -install_name "@rpath/$NAME.dylib" -isysroot "$SDK" \
   -I "$ROOT/shared" -I "$SOURCE" "-DWCS_APP_GROUP=@\"$APP_GROUP_ID\"" \
