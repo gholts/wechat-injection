@@ -123,9 +123,9 @@ test('responsive form stays within the viewport and can cancel', async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const sizes = await page.locator('input').evaluateAll((elements) => elements.map((element) => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })));
   expect(new Set(sizes.map((size) => size.width)).size).toBe(1);
-  expect(sizes.every((size) => size.height === 36)).toBe(true);
+  expect(sizes.every((size) => size.width === 280 && size.height === 26)).toBe(true);
   const buttons = await page.evaluate(() => [getComputedStyle(document.querySelector('#build')), getComputedStyle(document.querySelector('#ipa'), '::file-selector-button'), getComputedStyle(document.querySelector('#profiles'), '::file-selector-button')].map((style) => [style.width, style.height]));
-  expect(buttons).toEqual([['128px', '36px'], ['128px', '36px'], ['128px', '36px']]);
+  expect(buttons).toEqual([['104px', '26px'], ['104px', '26px'], ['104px', '26px']]);
   await page.locator('#build').click();
   await page.locator('#cancel').click();
   await expect(page.locator('#status')).toContainText('Canceled');
