@@ -1,11 +1,11 @@
 SOURCES := $(shell find dylibs shared -name '*.h' -o -name '*.m')
 
-.PHONY: build WeChatFocused format lint
+.PHONY: build WeChatFocused WeChatStickers format lint
 
 build:
 	./build.sh
 
-WeChatFocused:
+WeChatFocused WeChatStickers:
 	./build.sh $@
 
 format:
